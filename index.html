@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Compensation &amp; Incentives Hub · Doctors &amp; Admin Performance · SGH</title>
+  <link rel="icon" type="image/png" href="logo-mark.png?v=6d5fbef93d" />
+  <link rel="apple-touch-icon" href="logo-mark.png?v=6d5fbef93d" />
+  <link rel="stylesheet" href="styles.css?v=a27841e536" />
+  <script>
+    document.documentElement.dataset.theme = 'dark'; // dark is the default; a saved choice wins
+    try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open specialties menu" title="Specialties">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="hosp-logo">
+        <img src="logo.png?v=d822cee4c0" alt="Saudi German Hospital" class="logo-light" height="44" />
+        <img src="logo-dark.png?v=94eecc8be0" alt="Saudi German Hospital" class="logo-dark" height="44" />
+      </div>
+      <span class="brand-divider" aria-hidden="true"></span>
+      <div class="brand-text">
+        <h1 class="app-title">
+          <span class="t-main">Compensation &amp; Incentives Hub</span>
+          <span class="t-accent">Doctors &amp; Admin Performance</span>
+        </h1>
+      </div>
+    </div>
+    <div class="seg branch-seg" id="branchSeg" role="tablist" aria-label="Branch">
+      <button data-v="all" class="on">All branches</button>
+      <button data-v="SGH-Cairo">SGH-Cairo</button>
+      <button data-v="SGH-Alex">SGH-Alex</button>
+      <!-- Not live yet: shown for the full group picture only -->
+      <button class="soon" disabled title="Coming soon">SGH-Giza</button>
+      <button class="soon" disabled title="Coming soon">SGH-Morocco</button>
+    </div>
+    <div class="top-actions">
+      <button class="pill live" id="liveBadge" title="Live connection to the Excel workbooks">
+        <span class="dot"></span><span id="liveText">Connecting…</span>
+      </button>
+      <button class="pill warn hidden" id="pendingBadge" title="Changes waiting to be written to Excel"></button>
+      <button class="pill viewers hidden" id="viewersBtn" title="Who is viewing the online dashboard">
+        <svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="viewersText">Viewers</span>
+      </button>
+      <button class="pill dq hidden" id="dqBtn" title="Checks on the uploaded files (admin)">
+        <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg><span id="dqText">Data check</span>
+      </button>
+      <button class="btn" id="sumBtn" title="A one-page summary of a month, ready to print or save as PDF">
+        <svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg><span>Monthly summary</span>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <button class="btn" id="uploadBtn" title="Upload monthly Excel files">
+        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg><span>Upload files</span>
+      </button>
+      <button class="btn primary" id="addBtn" title="Add a record">
+        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Add record</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Specialties menu -->
+    <aside class="sidebar" id="sidebar" aria-label="Specialties">
+      <nav>
+        <a href="#/" class="nav-item" id="navOverview">
+          <svg viewBox="0 0 24 24"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-3H4zM14 4v3h6V4z"/></svg>
+          <span>Hospital overview</span>
+        </a>
+        <input type="search" id="navSearch" class="nav-search" placeholder="Find a specialty or department…" autocomplete="off" />
+        <div id="navList" class="nav-list"></div>
+      </nav>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <div class="content">
+      <!-- Timeline: years side by side, months inside -->
+      <section class="timeline-wrap" aria-label="Months">
+        <div class="timeline-head">
+          <span class="tl-title">Timeline</span>
+          <button class="tl-all" id="tlAll">All months</button>
+          <span class="tl-hint">Click a month, a quarter (Q1–Q4) or a year · Ctrl/Shift + click to pick several</span>
+          <span class="tl-context"><span id="periodLabel">—</span><span class="tl-file" id="fileName"></span></span>
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </section>
+
+      <section class="filters" aria-label="Filters">
+        <div class="field" id="fSpecialtyField">
+          <span>Specialty</span>
+          <div class="multi" id="fSpecialty"></div>
+        </div>
+        <div class="field">
+          <span>Position</span>
+          <div class="multi" id="fPosition"></div>
+        </div>
+        <label class="field grow">
+          <span>Search</span>
+          <input type="search" id="fSearch" placeholder="Name or ID…" autocomplete="off" />
+        </label>
+        <button class="btn ghost" id="resetBtn">Reset</button>
+      </section>
+
+      <div id="chips" class="chips"></div>
+
+      <main id="main" class="loading">
+        <section id="noData" class="empty-state big hidden"></section>
+        <section id="deptHeader" class="dept-header hidden"></section>
+        <section class="kpis" id="kpis"></section>
+
+        <section class="grid" id="grid">
+          <!-- Executive summary: what the numbers say, drawn from the data on screen -->
+          <article class="card span-12 insights-card" id="insightsCard">
+            <header><div><h2>Key insights</h2><p id="insightsNote">What stands out in the selected period</p></div></header>
+            <ul class="insights" id="insights"></ul>
+          </article>
+
+          <article class="card span-12 overview-only" id="catCard">
+            <header>
+              <div><h2>Business by category</h2><p>Click a tile to open its analysis · the totals above exclude the census (workload) data</p></div>
+            </header>
+            <div class="cat-tiles" id="catTiles"></div>
+          </article>
+
+          <article class="card span-12 overview-only hidden" id="branchCard">
+            <header>
+              <div><h2>Branches</h2><p>SGH-Cairo and SGH-Alex side by side for the selected months</p></div>
+            </header>
+            <div class="table-wrap"><table class="data" id="branchTable"></table></div>
+            <h4 class="sub-h">By category <small id="branchCatNote"></small></h4>
+            <div class="table-wrap"><table class="data by-branch" id="branchCatTable"></table></div>
+          </article>
+
+          <h3 class="section-title span-12" data-section="trends"><span>Trends</span><small>How the selected measures moved month by month</small></h3>
+
+          <!-- The year so far and where it is heading at the recent pace -->
+          <article class="card money span-12 hidden" id="ytdCard">
+            <header><div><h2 id="ytdTitle">Year to date &amp; year-end outlook</h2><p id="ytdNote"></p></div></header>
+            <div class="tg-summary ytd-summary" id="ytdSummary"></div>
+            <div class="trend-wrap ytd-wrap"><div class="chart" id="cYtdRev"></div><div class="chart" id="cYtdInc"></div></div>
+          </article>
+
+          <!-- Target, revenue (or sales / collection) and incentives paid, with the achievement % -->
+          <article class="card money span-12 needs-revenue" id="triCard">
+            <header>
+              <div>
+                <h2 id="tTri">Target, revenue &amp; incentives</h2>
+                <p id="triNote">Target against actual revenue (label = achievement %), and the incentives paid for it</p>
+              </div>
+              <div class="seg" id="triMode">
+                <button data-v="month" class="on">By month</button>
+                <button data-v="specialty">By specialty</button>
+                <button data-v="doctor">By doctor</button>
+              </div>
+            </header>
+            <div class="tg-summary" id="triSummary"></div>
+            <div class="tri-wrap">
+              <div><h3 class="bw-title" id="tTriA">Target vs revenue</h3><div class="chart" id="cTriA"></div></div>
+              <div><h3 class="bw-title" id="tTriB">Incentives paid</h3><div class="chart" id="cTriB"></div></div>
+            </div>
+          </article>
+
+          <article class="card money span-12" id="trendCard">
+            <header><div><h2 id="tTrend">Staff cost &amp; efficiency</h2><p id="trendNote">Staff cost per month and what each 1 EGP of it brings back</p></div></header>
+            <div class="trend-wrap">
+              <div class="chart" id="cTrendCost"></div>
+              <div class="chart" id="cTrendRev"></div>
+            </div>
+          </article>
+
+          <!-- Programmes by month: cases (Admission & Discharge), sales / collection against target -->
+          <article class="card span-12 monthly-only" id="monthlyCard">
+            <header>
+              <div><h2 id="tMonthly">By month</h2><p id="monthlyNote"></p></div>
+            </header>
+            <div class="trend-wrap">
+              <div class="chart" id="cMonA"></div>
+              <div class="chart" id="cMonB"></div>
+            </div>
+          </article>
+
+          <article class="card span-12 census-only">
+            <header><div><h2>Monthly workload</h2><p id="censusTrendNote">Visits, admissions and operations per month</p></div></header>
+            <div class="trend-wrap three">
+              <div class="chart" id="cCensusTV"></div>
+              <div class="chart" id="cCensusTA"></div>
+              <div class="chart" id="cCensusTO"></div>
+            </div>
+          </article>
+
+          <h3 class="section-title span-12" data-section="compare"><span>Comparisons &amp; variance</span><small>Where the results come from, against target and against each other</small></h3>
+
+          <!-- Incentive programmes (separate incentives, quarterly): who got how much of the total -->
+          <article class="card span-12 share-only person-level">
+            <header>
+              <div>
+                <h2 id="tIncShare">Share of total incentives</h2>
+                <p id="incShareNote">Each part’s share of the incentives paid, and incentives as a % of its salaries</p>
+              </div>
+            </header>
+            <div class="bw-wrap">
+              <div><h3 class="bw-title inc">Share of total incentives</h3><div class="chart" id="cIncShare"></div></div>
+              <div><h3 class="bw-title sal">Incentives as % of salaries</h3><div class="chart" id="cIncSal"></div></div>
+            </div>
+          </article>
+
+          <article class="card span-12 residents-only">
+            <header>
+              <div>
+                <h2>Residents’ share of specialty incentives</h2>
+                <p>Residents’ incentives ÷ the incentives of the OPD doctors in the same specialty</p>
+              </div>
+            </header>
+            <div class="chart" id="cShare"></div>
+          </article>
+
+          <!-- Dr's census / operation (workload) -->
+          <article class="card span-12 census-only">
+            <header>
+              <div><h2 id="tCensusSpec">Workload by specialty</h2><p>Click a bar to open the specialty</p></div>
+              <div class="seg" id="censusMetric">
+                <button data-v="visits" class="on">Visits</button>
+                <button data-v="admissions">Admissions</button>
+                <button data-v="operations">Operations</button>
+              </div>
+            </header>
+            <div class="chart" id="cCensusSpec"></div>
+          </article>
+
+          <article class="card span-6 census-only">
+            <header><div><h2>Admissions per 100 visits</h2><p>How many OPD visits turn into an admission, by specialty</p></div></header>
+            <div class="chart" id="cCensusRate"></div>
+          </article>
+
+          <article class="card span-6 census-only">
+            <header><div><h2 id="tCensusTop">Top 10 doctors</h2><p id="censusTopNote">By visits</p></div></header>
+            <div class="chart" id="cCensusTop"></div>
+          </article>
+
+          <article class="card money span-6 person-level">
+            <header><h2 id="tRev">Revenue by specialty</h2><p id="tRevSub">Click a bar to open the specialty</p></header>
+            <div class="chart" id="cRevSpec"></div>
+          </article>
+
+          <article class="card money span-6 person-level">
+            <header><h2 id="tCost">Payroll cost by specialty</h2><p>Salary + incentives · same order</p></header>
+            <div class="chart" id="cCost"></div>
+          </article>
+
+          <article class="card money span-12 needs-revenue person-level" id="targetCard">
+            <header>
+              <div>
+                <h2>Variance to target</h2>
+                <p id="tgNote">How far each specialty is above or below its monthly target</p>
+              </div>
+              <div class="seg" id="tgMode">
+                <button data-v="specialty" class="on">By specialty</button>
+                <button data-v="doctor">By doctor</button>
+              </div>
+            </header>
+            <div class="tg-summary" id="tgSummary"></div>
+            <div class="chart" id="cTarget"></div>
+            <div class="empty-state hidden" id="tgEmpty">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+              <div>
+                <b>No targets yet</b>
+                <p>Open <code>Source of the Incentive\Targets.xlsx</code>, type each doctor’s monthly revenue target in the <b>Monthly Target</b> column and save.
+                  This card then shows how much of the target every doctor and specialty achieved.</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Does the incentive follow the result? -->
+          <article class="card money span-12 needs-revenue person-level hidden" id="alignCard">
+            <header><div><h2>Is the incentive following the result?</h2><p id="alignNote"></p></div></header>
+            <p class="align-verdict" id="alignVerdict"></p>
+            <div class="tg-summary" id="alignSummary"></div>
+            <div class="chart tall" id="cAlign"></div>
+          </article>
+
+          <!-- Achievement by unit and month -->
+          <article class="card money span-12 needs-revenue hidden" id="heatCard">
+            <header><div><h2 id="heatTitle">Target achievement by month</h2><p id="heatNote"></p></div><div class="heat-legend" id="heatLegend"></div></header>
+            <div class="table-wrap heat-wrap"><table class="heat" id="heatTable"></table></div>
+          </article>
+
+          <!-- Scorecard: target, revenue, salary and incentives per doctor or per department -->
+          <article class="card money span-12 hidden" id="scoreCard">
+            <header>
+              <div><h2 id="scoreTitle">Performance scorecard</h2><p id="scoreNote"></p></div>
+              <div class="row-gap sc-tools">
+                <div class="seg" id="scoreMode"><button data-v="unit">Departments</button><button data-v="person">Doctors</button><button data-v="month">Months</button></div>
+                <label class="sc-find"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="scoreFind" placeholder="Find a name…" autocomplete="off" /></label>
+                <button class="btn ghost sm" id="scoreExport" title="Download this table as Excel">Excel</button>
+              </div>
+            </header>
+            <div class="sc-kpis" id="scoreKpis"></div>
+            <div class="table-wrap sc-wrap"><table class="data sc-table" id="scoreTable"></table></div>
+            <p class="sc-foot" id="scoreFoot"></p>
+          </article>
+
+          <!-- Cost per unit of work (closed departments' own measures) -->
+          <article class="card money span-12 hidden" id="unitCard">
+            <header><div><h2>Cost per unit of work</h2><p id="unitNote"></p></div></header>
+            <div class="table-wrap"><table class="data unit-table" id="unitTable"></table></div>
+          </article>
+
+          <article class="card money span-12 hide-in-dept needs-revenue no-measure" id="bwCard">
+            <header>
+              <div>
+                <h2 id="tBw">Strongest &amp; weakest specialties</h2>
+                <p id="bwNote">Net contribution = revenue − doctors’ salaries − incentives (other hospital costs are not included)</p>
+              </div>
+              <div class="seg" id="bwMetric">
+                <button data-v="contribution" class="on">Net contribution</button>
+                <button data-v="revenue">Revenue</button>
+                <button data-v="roi">Revenue ÷ cost</button>
+              </div>
+            </header>
+            <div class="bw-wrap">
+              <div><h3 class="bw-title best">Top 5</h3><div class="chart short" id="cBest"></div></div>
+              <div><h3 class="bw-title worst">Bottom 5</h3><div class="chart short" id="cWorst"></div></div>
+            </div>
+          </article>
+
+          <article class="card money span-12 needs-revenue no-measure" id="riCard">
+            <header>
+              <div>
+                <h2 id="tRi">Are incentives in line with revenue?</h2>
+                <p id="riNote">Each dot is a specialty · above the line = more incentive per 1 EGP of revenue than the average</p>
+              </div>
+              <div class="seg" id="riMode">
+                <button data-v="specialty" class="on">By specialty</button>
+                <button data-v="doctor">By doctor</button>
+              </div>
+            </header>
+            <div class="chart tall" id="cRevInc"></div>
+          </article>
+
+          <h3 class="section-title span-12" data-section="detail"><span>Detail</span><small>People, distributions and the full tables</small></h3>
+
+          <article class="card money span-6 person-level" id="topCard">
+            <header>
+              <h2 id="tTop">Top 10 doctors</h2>
+              <div class="seg" id="topMetric">
+                <button data-v="revenue" class="on">Revenue</button>
+                <button data-v="incentives">Incentives</button>
+                <button data-v="incentiveRate">Incentive %</button>
+              </div>
+            </header>
+            <div class="chart" id="cTop"></div>
+          </article>
+
+          <article class="card money span-6 needs-revenue person-level" id="lowCard">
+            <header>
+              <h2 id="tLow">Lowest 10 doctors</h2>
+              <div class="seg" id="lowMetric">
+                <button data-v="revenue" class="on">Revenue</button>
+                <button data-v="revPerSalary">Revenue ÷ salary</button>
+                <button data-v="incentives">Incentives</button>
+              </div>
+            </header>
+            <div class="chart" id="cLow"></div>
+          </article>
+
+          <article class="card money span-6 needs-revenue no-measure" id="roiCard">
+            <header>
+              <div>
+                <h2 id="tRoi">Revenue per 1 EGP of staff cost</h2>
+                <p id="roiNote">Cost = salary + incentives · bars = number of doctors</p>
+              </div>
+            </header>
+            <div class="chart" id="cRoi"></div>
+          </article>
+
+          <article class="card money span-6 person-level" id="histCard">
+            <header><h2>Incentive rate distribution</h2><p>Incentives ÷ salary · bars = number of people</p></header>
+            <div class="chart" id="cHist"></div>
+          </article>
+
+          <article class="card money span-12 person-level" id="posCard">
+            <header><h2>Headcount by position</h2><p>Click a bar to filter</p></header>
+            <div class="chart" id="cPos"></div>
+          </article>
+
+          <article class="card money span-12 collapsible person-level" id="specCard">
+            <header>
+              <h2 id="specTitle">Specialty summary</h2>
+              <div class="row-gap">
+                <button class="btn ghost sm" data-export="spec">Export CSV</button>
+                <button class="btn sm toggle" id="specToggle" aria-expanded="false">
+                  <span>Show details</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+              </div>
+            </header>
+            <p class="collapsed-note" id="specNote"></p>
+            <div class="table-wrap collapse-body"><table id="specTable" class="data"></table></div>
+          </article>
+
+          <article class="card span-12 collapsible" id="recCard">
+            <header>
+              <h2><span id="tRec">Doctors</span> <span class="count" id="recCount"></span></h2>
+              <div class="row-gap">
+                <button class="btn ghost sm" data-export="records">Export CSV</button>
+                <button class="btn sm toggle" id="recToggle" aria-expanded="false">
+                  <span>Show details</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+              </div>
+            </header>
+            <p class="collapsed-note" id="recNote"></p>
+            <div class="collapse-body">
+              <div class="table-wrap"><table id="recTable" class="data"></table></div>
+              <div class="pager" id="pager"></div>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add / edit dialog -->
+  <dialog id="recDialog">
+    <form id="recForm" method="dialog" novalidate>
+      <header>
+        <h2 id="dlgTitle">Add record</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </header>
+      <div class="form-grid">
+        <label><span>Branch *</span><select name="branch"><option>SGH-Cairo</option><option>SGH-Alex</option></select></label>
+        <label><span>Category *</span><select name="category">
+          <option value="opd">OPD Dr's (Med 01)</option>
+          <option value="residents">Residents / Registrars (Med 02)</option>
+          <option value="allied">Allied / Closed Departments</option>
+          <optgroup label="Separate Incentives">
+            <option value="bd">Business Development</option>
+            <option value="admission">Admission &amp; Discharge Incentives</option>
+            <option value="patientrel">Patient Relation Incentives</option>
+            <option value="legal">Legal Affairs (0500) Incentives</option>
+            <option value="collection">CAM Collection Incentives</option>
+          </optgroup>
+          <option value="quarterly">Quarterly Incentive</option>
+          <option value="other">Other Incentives</option>
+        </select></label>
+        <label><span>Report month *</span><input type="month" name="period" required /></label>
+        <label><span>ID *</span><input name="id" required inputmode="numeric" /></label>
+        <label class="full"><span>Name *</span><input name="name" required /></label>
+        <label><span>Position *</span><input name="position" list="dlPositions" required /></label>
+        <label><span>Specialty / department *</span><input name="specialty" list="dlSpecialties" required /></label>
+        <label><span>Salary</span><input name="salary" type="number" min="0" step="any" /></label>
+        <label><span>Incentives</span><input name="incentives" type="number" min="0" step="any" /></label>
+        <label><span>Revenue</span><input name="revenue" type="number" min="0" step="any" /></label>
+        <div class="calc">
+          <div><span>Incentive rate</span><b id="calcIR">—</b></div>
+          <div><span>Revenue rate</span><b id="calcRR">—</b></div>
+        </div>
+      </div>
+      <p class="form-errors" id="formErrors"></p>
+      <footer>
+        <button type="button" class="btn danger ghost hidden" id="deleteBtn">Delete</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary" id="saveBtn">Save to Excel</button>
+      </footer>
+    </form>
+    <datalist id="dlPositions"></datalist>
+    <datalist id="dlSpecialties"></datalist>
+  </dialog>
+
+  <!-- Upload monthly files -->
+  <dialog id="upDialog" class="wide">
+    <form id="upForm" method="dialog" novalidate>
+      <header>
+        <h2>Upload monthly files</h2>
+        <button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </header>
+      <!-- Set when the window is opened from a category / department page -->
+      <div id="upCtx" class="up-ctx hidden"></div>
+      <!-- Online (GitHub Pages) copy: upload through GitHub's own page, no token needed -->
+      <div id="upGithub" class="up-github hidden">
+        <p class="up-gh-lead">Choose where the files belong — GitHub opens its upload page in that folder:</p>
+        <a class="hidden" id="upGithubLink" target="_blank" rel="noopener"></a>
+        <div class="up-gh-folders" id="upGhFolders"></div>
+        <ol>
+          <li>Drag your Excel files onto the GitHub page — monthly files, or one file with many months. Any file name is fine.</li>
+          <li>Click the green <b>Commit changes</b> button.</li>
+          <li>That’s it. In about 2–3 minutes each file is saved as <code>&lt;year&gt;/&lt;Month&gt;.xlsx</code> (the month is read from its ReportDate), an existing month is replaced, and this dashboard refreshes by itself.</li>
+        </ol>
+        <p class="muted">You need to be signed in to GitHub with access to the private repository (the account that owns it).</p>
+      </div>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="upInput" accept=".xlsx,.xlsm" multiple hidden />
+        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+        <b>Drop Excel files here or click to choose</b>
+        <span class="muted">Monthly incentive files: the month is read from the ReportDate column (or the file name) and the file is saved in its year folder. A targets export (one file for all months) is recognised automatically and saved in the Targets folder.</span>
+      </label>
+      <div id="upList" class="up-list"></div>
+      <p class="form-errors" id="upErrors"></p>
+      <footer>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary" id="upSubmit" disabled>Upload</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Doctor details -->
+  <dialog id="docDialog" class="side">
+    <div id="docBody"></div>
+  </dialog>
+
+  <!-- Password prompt (only when ADMIN_PASSWORD is set on the server) -->
+  <dialog id="pwDialog">
+    <form id="pwForm" method="dialog">
+      <header><h2>Admin password</h2></header>
+      <p class="muted">Editing the workbook is protected. Enter the admin password.</p>
+      <input type="password" name="pw" required autocomplete="current-password" />
+      <p class="form-errors" id="pwErr"></p>
+      <footer><span class="spacer"></span><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn primary">Unlock</button></footer>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <!-- Unlock screen (static/GitHub Pages build only: data is encrypted) -->
+  <div id="lockScreen" class="lock hidden">
+    <form id="lockForm" class="lock-card">
+      <div class="hosp-logo lock-logo">
+        <img src="logo.png?v=d822cee4c0" alt="Saudi German Hospital" class="logo-light" />
+        <img src="logo-dark.png?v=94eecc8be0" alt="Saudi German Hospital" class="logo-dark" />
+      </div>
+      <h2 class="app-title lock-title"><span class="t-main">Compensation &amp; Incentives Hub</span><span class="t-accent">Doctors &amp; Admin Performance</span></h2>
+      <p class="muted" id="lockLead">This dashboard is protected. Enter your access code or the password to view it.</p>
+      <input type="password" id="lockPw" placeholder="Access code or password" autocomplete="current-password" required />
+      <!-- Shared password: who is this? (personal codes already say) -->
+      <input type="text" id="lockName" class="hidden" placeholder="Your name" autocomplete="name" maxlength="60" />
+      <p class="form-errors" id="lockErr"></p>
+      <button class="btn primary" id="lockBtn">Unlock</button>
+    </form>
+  </div>
+
+  <!-- Data check (admin) -->
+  <dialog id="dqDialog" class="wide">
+    <div class="vw">
+      <header><h2>Data check</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+      <div id="dqBody" class="vw-body"></div>
+    </div>
+  </dialog>
+
+  <!-- Monthly summary: one page, printable -->
+  <dialog id="sumDialog" class="sheet">
+    <div id="sumBody" class="sum"></div>
+  </dialog>
+
+  <!-- Viewers of the online dashboard (admin only) -->
+  <dialog id="viewersDialog" class="wide">
+    <div class="vw">
+      <header>
+        <h2>Viewers</h2>
+        <div class="seg" id="vwTabs">
+          <button data-v="activity" class="on">Who’s online</button>
+          <button data-v="codes" class="local-only">Access codes</button>
+        </div>
+        <button type="button" class="icon-btn" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </header>
+      <div id="vwBody" class="vw-body"></div>
+    </div>
+  </dialog>
+
+  <script>window.DASH_STATIC = true; window.DASH_UPLOAD = {"repo":"sirmohamedbesheer-gif/doctors-dashboard","branch":"main","dir":"Source of the Incentive"};</script>
+  <script src="vendor/echarts/echarts.min.js?v=1a87fe5915"></script>
+  <script src="xlsx-sniff.js?v=bb73ec9984"></script>
+  <script src="template-check.js?v=d459b5eb8a"></script>
+  <script src="xlsx-write.js?v=580fc189a4"></script>
+  <script src="app.js?v=16e591e111"></script>
+  <script src="session.js?v=09c11e0133"></script>
+</body>
+</html>
